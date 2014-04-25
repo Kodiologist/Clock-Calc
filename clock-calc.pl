@@ -38,28 +38,32 @@ sub parse_time
    {my $str = lc shift;
     $str =~ s/\A\s+//;
     $str =~ s/\s+\z//;
-    given ($str)
-       {when ('midnight') {hrmin 0, 0, ABSOLUTE}
-        when ('noon') {hrmin 12, 0, ABSOLUTE}
-        when ('now')
-           {my ($sec, $min, $hr) = localtime;
-            hrmin $hr, $min + ($sec >= 30), ABSOLUTE}
-        when ('0') {hrmin 0, 0, RELATIVE}
-        when (/\A(\d+)\s+h/) {hrmin $1, 0, RELATIVE}
-        when (/\A(\d+)\s+m(?:\Z|s|in)/) {hrmin 0, $1, RELATIVE}
-        when (/\A(\d+)(?::(\d+))?(?:\s+(am|pm))?/)
-           {my ($hour, $min, $ampm) = ($1, $2 // 0, $3);
-            $hour =
-                $hour eq '12'
-              ? defined $ampm && $ampm eq 'am'
-                ? 0
-                : 12
-              : defined $ampm && $ampm eq 'pm'
-                ? $hour + 12
-                : $hour;
-            hrmin $hour, $min, ABSOLUTE;}
-        default
-           {die "No parse: $_"}}}
+    if ($str eq 'midnight')
+       {hrmin 0, 0, ABSOLUTE}
+    elsif ($str eq ('noon'))
+       {hrmin 12, 0, ABSOLUTE}
+    elsif ($str eq 'now')
+       {my ($sec, $min, $hr) = localtime;
+        hrmin $hr, $min + ($sec >= 30), ABSOLUTE}
+    elsif ($str eq '0')
+       {hrmin 0, 0, RELATIVE}
+    elsif ($str =~ /\A(\d+)\s+h/)
+       {hrmin $1, 0, RELATIVE}
+    elsif ($str =~ /\A(\d+)\s+m(?:\Z|s|in)/)
+       {hrmin 0, $1, RELATIVE}
+    elsif ($str =~ /\A(\d+)(?::(\d+))?(?:\s+(am|pm))?/)
+       {my ($hour, $min, $ampm) = ($1, $2 // 0, $3);
+        $hour =
+            $hour eq '12'
+          ? defined $ampm && $ampm eq 'am'
+            ? 0
+            : 12
+          : defined $ampm && $ampm eq 'pm'
+            ? $hour + 12
+            : $hour;
+        hrmin $hour, $min, ABSOLUTE}
+     else
+       {die "No parse: $_";}}
 
 sub eval_time_expr
    {my $str = shift;
